@@ -1,15 +1,16 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { useReactTable, getCoreRowModel, getSortedRowModel, flexRender, getFilteredRowModel } from "@tanstack/react-table";
+import { useEffect, useMemo, useState } from "react";
+import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel } from "@tanstack/react-table";
 import { Input } from "../../components/ui/input";
 import useAuth from "../../hooks/useAuth";
-import { GetProducts } from "@/services/Products";
 import ProductTable from "./ProductTable";
 import ProductForm from "./ProductForm";
 import ProductTablePagination from "./ProductTablePagination";
 import { Button } from "../../components/ui/button";
 import api from "../../services/api";
 import { endPoints } from "../../constants/urls";
-import { usePagination } from "../../hooks/usePagination";
+import { usePaginationState } from "../../store/PaginationState";
+import { GetProducts } from "../../services/Products";
+import { Loader } from "lucide-react";
 
 interface Product {
   id: number;
@@ -27,7 +28,9 @@ export function Component() {
   const [globalFilter, setGlobalFilter] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const { }
+  const PaginationState = usePaginationState();
+  const { pageIndex, pageSize } = PaginationState.getState();
+  const { setTotalCount } = PaginationState;
 
   // Modal state for add/edit
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -39,9 +42,12 @@ export function Component() {
       setLoading(true);
       try {
         const res = await GetProducts(pageIndex, pageSize);
+        console.log("res", res);
+
         setProducts(res?.data?.products || res?.data || []);
         setTotalCount(res?.data?.total || res?.data?.count || 0);
       } catch (e) {
+        console.error("Error fetching products", e);
         setProducts([]);
       }
       setLoading(false);
@@ -128,8 +134,9 @@ export function Component() {
     setShowForm(false);
   };
 
+
   if (!user) {
-    return <div className="p-10 text-red-500">Access denied. Admins only.</div>;
+    return <div className="p-10 text-red-500">Access denied</div>;
   }
 
   return (
@@ -144,15 +151,18 @@ export function Component() {
         onChange={e => setGlobalFilter(e.target.value)}
         className="mb-4 max-w-xs"
       />
-      <ProductTable products={products} columns={columns} loading={loading} table={table} />
-      <ProductTablePagination />
-      {showForm && (
-        <ProductForm
-          product={editingProduct}
-          onClose={() => setShowForm(false)}
-          onSubmit={handleFormSubmit}
-        />
-      )}
+      {loading ? <Loader /> :
+        <div className="overflow-x-auto ">
+          <ProductTable products={products} columns={columns} loading={loading} table={table} />
+          <ProductTablePagination />
+          {showForm && (
+            <ProductForm
+              product={editingProduct}
+              onClose={() => setShowForm(false)}
+              onSubmit={handleFormSubmit}
+            />
+          )}
+        </div>}
     </div>
   );
 }

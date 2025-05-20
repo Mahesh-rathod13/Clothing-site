@@ -30,7 +30,7 @@ export function LoginForm({
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { login } = useAuth();
+  const { login, loading } = useAuth();
 
 
   const onSubmit = async (data : FormData) => {
@@ -49,7 +49,7 @@ export function LoginForm({
         res.data.refresh_token);
 
       // Redirect to home page
-      window.location.href = '/';
+      window.location.href = '/';  //fix this with navigate
     } catch (error) {
       console.error("Login failed:", error);
       setError(

@@ -1,20 +1,26 @@
-import React from "react";
 import { Button } from "../../components/ui/button";
+import { usePaginationState } from '../../store/PaginationState.js';
 
 export default function ProductTablePagination() {
+  const { pageIndex, pageSize } = usePaginationState().getState();
+  console.log("pageIndex", pageIndex);
+  
+
+  const {setPageIndex, setPageSize} = usePaginationState();
+
   return (
     <div className="flex justify-between items-center mt-4">
       <Button
-        onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+        onClick={() => setPageIndex(pageIndex-1)}
         disabled={pageIndex === 0}
       >
         Previous
       </Button>
       <span>
-        Page {pageIndex + 1} of {Math.ceil(totalCount / pageSize) || 1}
+        Page {pageIndex + 1}
       </span>
       <Button
-        onClick={() => setPageIndex((p) => p + 1)}
+        onClick={() => setPageIndex(pageIndex+1)}
         // disabled={(pageIndex + 1) * pageSize >= totalCount}
       >
         Next
