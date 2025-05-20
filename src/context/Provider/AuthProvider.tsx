@@ -29,13 +29,15 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     const loadUser = async () => {
       try {
         setLoading(true);
-        const storedUserId = localStorage.getItem('userId');
+        console.log('Loading user...');
+        // const storedUserId = localStorage.getItem('userId');
         const accessToken = localStorage.getItem('accessToken');
         const refreshToken = localStorage.getItem('refreshToken');
 
-        if (storedUserId && accessToken) {
-            console.log('Stored User ID:', storedUserId);
-            console.log(isTokenExpired(accessToken));
+        if (accessToken) {
+            // console.log('Stored User ID:', storedUserId);   // Check if user ID is stored
+            console.log(isTokenExpired(accessToken));     // Check if token is expired
+
           if (isTokenExpired(accessToken) && refreshToken) {
             try {
               const refreshResponse = await api.post(endPoints.refresh, { refreshToken });
@@ -56,8 +58,10 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
 
           try {
+            console.log('Fetching user profile...');
             const res = await api.get(`${endPoints.profile}`);
             setUser(res.data);
+            console.log(res.data)
           } catch (error) {
             console.error("Profile fetch failed:", error);
             logout();
@@ -77,12 +81,11 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
-      api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
-      const userRes = await api.get(endPoints.profile);
-      setUser(userRes.data);
-      console.log(userRes.data);
-      localStorage.setItem('userId', userRes.data.id);
+      // const userRes = await api.get(endPoints.profile);
+      // setUser(userRes.data);
+      // console.log(userRes.data);
+      // localStorage.setItem('userId', userRes.data.id);
       
     } catch (error) {
       console.error("Login failed:", error);

@@ -56,7 +56,7 @@ export function Component() {
         <div className='flex flex-wrap gap-10 justify-center items-center'>
           {
             products.map((product) => (
-              <ProductCard id={product.id} title={product.title} image={product.images[0]} price={product.price} category={product.category.name} slug={product.slug} />
+              <ProductCard key={product.id} id={product.id} title={product.title} image={product.images[0]} price={product.price} category={product.category.name} slug={product.slug} />
             ))
           }
         </div>

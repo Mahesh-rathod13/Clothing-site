@@ -20,7 +20,7 @@ interface Product {
   slug: string;
 }
 
-export default function ProductsAdminPage() {
+export function Component() {
   const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -164,3 +164,5 @@ export default function ProductsAdminPage() {
     </div>
   );
 }
+
+Component.displayName = 'ProductsAdminPage';
