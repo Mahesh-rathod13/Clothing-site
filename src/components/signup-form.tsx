@@ -12,46 +12,51 @@ import {
 import { cn } from "@/lib/utils";
 import api from "../services/api";
 import { endPoints } from "../constants/urls";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+
+const SignupSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters long"),
+  confirmPassword: z.string().min(6, "Confirm Password is required"),
+  avatar: z.string().url("Invalid URL format"),
+  // role: z.enum(["customer", "admin"]),
+});
+
+type SignupFormData = z.infer<typeof SignupSchema>;
 
 export default function SignupForm({ className }: { className?: string }) {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    avatar: "",
-    role: "customer",
+  
+  const { register, handleSubmit, formState : { errors } } = useForm<SignupFormData>({
+    resolver: zodResolver(SignupSchema),
+    mode: "onBlur",
   });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
 
   const handleRoleChange = (value: string) => {
     setFormData((prev) => ({ ...prev, role: value }));
   };
 
-  const handleSubmit = async(e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
+  const onSubmit = async(data : FormData) => {
+    console.log(data)
+    if (data.password !== data.confirmPassword) {
       alert("Passwords do not match.");
       return;
     }
 
     try {
-        const res = await api.post(endPoints.signup, formData);
-        console.log(res);
+        const res = await api.post(endPoints.signup, data);
+        window.location.href = "/auth/login";
     } catch (error) {
         
     }
-    alert("Signup successful!");
   };
 
   return (
     <form
-      onSubmit={handleSubmit}
-      className={cn("mx-auto mt-10 space-y-6 bg-white p-8 rounded-2xl", className)}
+      onSubmit={handleSubmit(onSubmit)}
+      className={cn("mx-auto mt-10 space-y-6 bg-white p-8 rounded-2xl w-[70%]", className)}
     >
       <div className="text-center">
         <h1 className="text-2xl font-bold">Create your account</h1>
@@ -61,70 +66,59 @@ export default function SignupForm({ className }: { className?: string }) {
       </div>
 
       <div className="space-y-4">
-        <div>
+        <div className="grid gap-3">
           <Label htmlFor="name">Full Name</Label>
           <Input
-            id="name"
             name="name"
-            value={formData.name}
-            onChange={handleChange}
+            {...register("name")}
             placeholder="John Doe"
             required
           />
         </div>
 
-        <div>
+        <div className="grid gap-3">
           <Label htmlFor="email">Email</Label>
           <Input
-            id="email"
             type="email"
             name="email"
-            value={formData.email}
-            onChange={handleChange}
+            {...register("email")}
             placeholder="john@example.com"
             required
           />
         </div>
 
-        <div>
+        <div className="grid gap-3">
           <Label htmlFor="password">Password</Label>
           <Input
-            id="password"
             type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
+            {...register("password")}
+            placeholder="Enter your password"
             required
           />
         </div>
 
-        <div>
+        <div className="grid gap-3">
           <Label htmlFor="confirmPassword">Confirm Password</Label>
           <Input
-            id="confirmPassword"
             type="password"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
+            {...register("confirmPassword")}
+            placeholder="Re-enter your password"
             required
           />
         </div>
 
-        <div>
+        <div className="grid gap-3">
           <Label htmlFor="avatar">Avatar URL</Label>
           <Input
-            id="avatar"
             type="url"
-            name="avatar"
-            value={formData.avatar}
-            onChange={handleChange}
+            {...register("avatar")}
             placeholder="https://example.com/avatar.jpg"
           />
         </div>
 
-        <div>
+        {/* <div className="grid gap-3">
           <Label htmlFor="role">Role</Label>
-          <Select value={formData.role} onValueChange={handleRoleChange}>
+          <Select {...register("role")}>
             <SelectTrigger>
               <SelectValue placeholder="Select a role" />
             </SelectTrigger>
@@ -133,7 +127,7 @@ export default function SignupForm({ className }: { className?: string }) {
               <SelectItem value="admin">Admin</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
       </div>
 
       <Button type="submit" className="w-full">

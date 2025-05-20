@@ -15,17 +15,17 @@ export default function ProductTable({
   table: any;
 }) {
   return (
-    <Card>
-      <CardContent>
+    // <Card>
+    //   <CardContent>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
               {table.getHeaderGroups().map(headerGroup => (
-                <tr key={headerGroup.id}>
+                <tr key={headerGroup.id} className="bg-gray-100 hover:opacity-100 rounded-t-2xl">
                   {headerGroup.headers.map(header => (
                     <th
                       key={header.id}
-                      className="px-4 py-2 cursor-pointer"
+                      className="py-2 px-4 cursor-pointer text-left"
                       onClick={header.column.getToggleSortingHandler?.()}
                     >
                       {flexRender(header.column.columnDef.header, header.getContext())}
@@ -54,7 +54,7 @@ export default function ProductTable({
             </tbody>
           </table>
         </div>
-      </CardContent>
-    </Card>
+    //   </CardContent>
+    // </Card>
   );
 }

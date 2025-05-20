@@ -6,51 +6,46 @@ import { useState } from "react"
 import api from "../services/api"
 import { endPoints } from "../constants/urls"
 import useAuth from "../hooks/useAuth"
-import axios from "axios"
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader } from "lucide-react"
 
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+});
+
+type LoginFormProps = z.infer<typeof loginSchema>;
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
 
-  const [loginData, setLoginData] = useState({
-    email: '',
-    password: ''
+  const { register, handleSubmit } = useForm<LoginFormProps>({
+    resolver : zodResolver(loginSchema),
+    mode : 'onBlur'
   });
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
 
-  const handleChange = (e: {
-    target: {
-      name: string, value: string
-    }
-  }) => {
-    setLoginData({ ...loginData, [e.target.name]: e.target.value });
-    // Clear error when user types
-    if (error) setError(null);
-  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data : FormData) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Login API call
-      const res = await api.post(endPoints.login, {
-        email: loginData.email,
-        password: loginData.password
-      });
+      setIsLoading(true)
+      const res = await api.post(endPoints.login, JSON.stringify(data));
 
       if (!res.data.access_token || !res.data.refresh_token) {
         throw new Error("Invalid response from server");
       }
 
-      login(
-        res.data.access_token,
+      login(res.data.access_token,
         res.data.refresh_token);
 
       // Redirect to home page
@@ -66,8 +61,10 @@ export function LoginForm({
     }
   }
 
+  if(isLoading) return <Loader />
+
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props}>
+    <form className={cn("flex flex-col gap-6", className)} {...props} onSubmit={handleSubmit(onSubmit)}>
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-2xl font-bold">Login to your account</h1>
         <p className="text-muted-foreground text-sm text-balance">
@@ -78,12 +75,9 @@ export function LoginForm({
         <div className="grid gap-3">
           <Label htmlFor="email">Email</Label>
           <Input
-            id="email"
             type="email"
-            name='email'
-            value={loginData.email}
             placeholder="m@example.com"
-            onChange={handleChange}
+            {...register("email")}
             required
           />
         </div>
@@ -98,14 +92,11 @@ export function LoginForm({
             </a>
           </div>
           <Input
-            name='password'
-            id="password"
             type="password"
-            value={loginData.password}
-            onChange={handleChange}
+            {...register("password")}
             required />
         </div>
-        <Button type="submit" className="w-full" onClick={handleSubmit}>
+        <Button type="submit" className="w-full">
           Login
         </Button>
         <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
@@ -129,6 +120,7 @@ export function LoginForm({
           Sign up
         </a>
       </div>
+      <p>{error}</p>
     </form>
   )
 }

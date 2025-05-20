@@ -2,16 +2,12 @@ import { createBrowserRouter } from "react-router";
 import { AuthRoutes } from "./AuthRoutes";
 import { HomeRoutes } from "./HomeRoutes";
 import ProductRoutes from "./ProductRoutes";
-import ProductsAdminPage from '../pages/Admin/ProductsAdminPage';
-
+import { AdminRoutes } from "./AdminRoutes";
 const router = createBrowserRouter([
     HomeRoutes,
     AuthRoutes,
     ProductRoutes,
-    {
-        path: "/admin/products",
-        element: <ProductsAdminPage />,
-    },
+    AdminRoutes
 ]);
 
 

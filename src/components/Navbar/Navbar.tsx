@@ -7,7 +7,7 @@ import useAuth from "../../hooks/useAuth"
 import { useLocation } from "react-router"
 
 const Navbar = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const location = useLocation();
   const isLoginPage = location.pathname.includes('/login');
@@ -23,8 +23,8 @@ const Navbar = () => {
             <NavLink to='/' className={({isActive})=>`text-md font-medium text-muted-foreground hover:text-foreground ${isActive ? 'text-red-800' : 'text-muted-foreground'}`}>
               Home
             </NavLink>
-            <NavLink to='/about' className={({isActive})=>`text-md font-medium text-muted-foreground hover:text-foreground ${isActive ? 'text-red-800' : 'text-muted-foreground'}`}>
-              About
+            <NavLink to='/admin/products' className={({isActive})=>`text-md font-medium text-muted-foreground hover:text-foreground ${isActive ? 'text-red-800' : 'text-muted-foreground'}`}>
+              posts
             </NavLink>
             <NavLink to='/contact' className={({isActive})=>`text-md font-medium text-muted-foreground hover:text-foreground ${isActive ? 'text-red-800' : 'text-muted-foreground'}`}>
               Contact
@@ -38,14 +38,14 @@ const Navbar = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className="h-8 w-8 cursor-pointer">
-                  <AvatarImage src="https://github.com/shadcn.png" />
+                  <AvatarImage src={user.avatar} />
                   <AvatarFallback>U</AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>Profile</DropdownMenuItem>
                 <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Logout</DropdownMenuItem>
+                <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             :
