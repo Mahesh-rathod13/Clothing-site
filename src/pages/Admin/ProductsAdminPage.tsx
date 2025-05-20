@@ -9,6 +9,7 @@ import ProductTablePagination from "./ProductTablePagination";
 import { Button } from "../../components/ui/button";
 import api from "../../services/api";
 import { endPoints } from "../../constants/urls";
+import { usePagination } from "../../hooks/usePagination";
 
 interface Product {
   id: number;
@@ -26,14 +27,11 @@ export function Component() {
   const [globalFilter, setGlobalFilter] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const { }
+
   // Modal state for add/edit
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showForm, setShowForm] = useState(false);
-
-  // Pagination state
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(8);
-  const [totalCount, setTotalCount] = useState(0);
 
   // Fetch products
   useEffect(() => {
@@ -82,7 +80,7 @@ export function Component() {
           </div>
         ),
       },
- ],
+    ],
     []
   );
 
@@ -147,13 +145,7 @@ export function Component() {
         className="mb-4 max-w-xs"
       />
       <ProductTable products={products} columns={columns} loading={loading} table={table} />
-      <ProductTablePagination
-        pageIndex={pageIndex}
-        pageSize={pageSize}
-        totalCount={totalCount}
-        setPageIndex={setPageIndex}
-        setPageSize={setPageSize}
-      />
+      <ProductTablePagination />
       {showForm && (
         <ProductForm
           product={editingProduct}

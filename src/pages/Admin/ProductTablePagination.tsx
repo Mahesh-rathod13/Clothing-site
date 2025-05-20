@@ -1,19 +1,7 @@
 import React from "react";
 import { Button } from "../../components/ui/button";
 
-export default function ProductTablePagination({
-  pageIndex,
-  pageSize,
-  totalCount,
-  setPageIndex,
-  setPageSize,
-}: {
-  pageIndex: number;
-  pageSize: number;
-  totalCount: number;
-  setPageIndex: (fn: (p: number) => number) => void;
-  setPageSize: (size: number) => void;
-}) {
+export default function ProductTablePagination() {
   return (
     <div className="flex justify-between items-center mt-4">
       <Button
