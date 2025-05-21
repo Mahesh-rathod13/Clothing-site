@@ -1,8 +1,26 @@
-import { useParams } from 'react-router';
+import { useParams, useNavigate } from 'react-router';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Minus, Plus, ShoppingCart, Truck, RefreshCcw, Heart } from 'lucide-react';
 import { RelatedProducts } from '../../components/RelatedProducts';
+import { useProductCartState } from '../../store/ProductCartState';
+import { Button } from '../../components/ui/button';
+
+import {
+  Breadcrumb,
+  BreadcrumbEllipsis,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "../../components/ui/breadcrumb"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu"
 
 export function Component() {
     const { id } = useParams();
@@ -10,6 +28,12 @@ export function Component() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [quantity, setQuantity] = useState(1);
+    const [isGoToCart, setIsGoToCart] = useState(false);
+    const navigate = useNavigate();
+
+    const { addToCart } = useProductCartState();
+
+    console.log(product)
 
     useEffect(() => {
         const loadProduct = async () => {
@@ -25,7 +49,7 @@ export function Component() {
                 setLoading(false);
             }
         };
-        
+
         loadProduct();
     }, [id]);
 
@@ -37,9 +61,12 @@ export function Component() {
         setQuantity((prev) => prev + 1);
     };
 
-    const addToCart = () => {
-        console.log(`Added ${quantity} of ${product.title} to cart.`);
-        // You can integrate your cart logic here
+    const addToCartHandler = () => {
+        if (product) {
+            addToCart({ ...product, quantity });
+            alert(`Added ${quantity} of ${product.title} to cart`);
+            setIsGoToCart(true)
+        }
     };
 
     if (loading) {
@@ -67,29 +94,36 @@ export function Component() {
     }
 
     // Safely get the first image or use a placeholder
-    const productImage = product.images && product.images.length > 0 
-        ? product.images[0] 
+    const productImage = product.images && product.images.length > 0
+        ? product.images[0]
         : '/api/placeholder/400/320';
 
     // Safely get the category name
-    const categoryName = product.category && product.category.name 
-        ? product.category.name 
+    const categoryName = product.category && product.category.name
+        ? product.category.name
         : 'Uncategorized';
 
     return (
         <main className="flex-grow container mx-auto px-4 py-6">
-            {/* Breadcrumb */}
-            <div className="text-sm text-gray-500 mb-6">
-                <a href="/" className="text-purple-600 hover:underline">Home</a>
-                <span className="mx-2">/</span>
-                <a href="/categories" className="text-purple-600 hover:underline">Categories</a>
-                <span className="mx-2">/</span>
-                <a href={`/categories/${product.category?.id || ''}`} className="text-purple-600 hover:underline">
-                    {categoryName}
-                </a>
-                <span className="mx-2">/</span>
-                <span className="text-gray-700">{product.title}</span>
-            </div>
+            <Breadcrumb className='mb-6'>
+                <BreadcrumbList>
+                    <BreadcrumbItem>
+                        <BreadcrumbLink className='text-blue-700 font-semibold underline' href="/">Home</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                        <BreadcrumbLink className='text-red-700 font-semibold underline' href="/">Categories</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                        <BreadcrumbLink className='text-pink-800 font-semibold underline' href="/">{categoryName}</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                        <BreadcrumbPage>{product.title}</BreadcrumbPage>
+                    </BreadcrumbItem>
+                </BreadcrumbList>
+            </Breadcrumb>
 
             {/* Product Container */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden mb-12">
@@ -151,13 +185,26 @@ export function Component() {
                                     <Plus size={16} />
                                 </button>
                             </div>
-                            <button
-                                onClick={addToCart}
-                                className="flex-1 bg-purple-700 hover:bg-purple-800 text-white font-semibold py-3 px-6 rounded-md flex items-center justify-center transition-colors duration-300"
-                            >
-                                <ShoppingCart size={18} className="mr-2" />
-                                Add to Cart
-                            </button>
+                            {
+                                !isGoToCart ? (
+                                    <Button
+                                        onClick={addToCartHandler}
+                                        disabled={quantity <= 0}
+                                        className="flex-1 bg-purple-700 hover:bg-purple-800 text-white font-semibold py-3 px-6 rounded-md flex items-center justify-center transition-colors duration-300"
+                                    >
+                                        <ShoppingCart size={18} className="mr-2" />
+                                        Add to Cart
+                                    </Button>) : (
+                                    <Button
+                                        onClick={() => navigate('/cart')}
+                                        disabled={quantity <= 0}
+                                        className="flex-1 bg-purple-700 hover:bg-purple-800 text-white font-semibold py-3 px-6 rounded-md flex items-center justify-center transition-colors duration-300"
+                                    >
+                                        <ShoppingCart size={18} className="mr-2" />
+                                        Check Cart
+                                    </Button>
+                                )
+                            }
                         </div>
 
                         {/* Product Meta */}
@@ -180,7 +227,7 @@ export function Component() {
             </div>
 
             {/* Related Products */}
-            <RelatedProducts currentProductId={id} />
+            <RelatedProducts currentProductId={Number(id)} />
         </main>
     );
 }

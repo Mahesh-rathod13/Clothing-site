@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { ReactNode } from 'react';
-
+import { useNavigate } from 'react-router';
 import AuthContext from '../AuthContext';
 import api from '../../services/api';
 import { endPoints } from "../../constants/urls";
@@ -27,78 +27,43 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const loadUser = async () => {
-      try {
-        setLoading(true);
-        console.log('Loading user...');
-        // const storedUserId = localStorage.getItem('userId');
-        const accessToken = localStorage.getItem('accessToken');
-        const refreshToken = localStorage.getItem('refreshToken');
+      setLoading(true);
+      const storedUser = localStorage.getItem('user');
+      const accessToken = localStorage.getItem('accessToken');
 
-        if (accessToken) {
-            // console.log('Stored User ID:', storedUserId);   // Check if user ID is stored
-            console.log(isTokenExpired(accessToken));     // Check if token is expired
-
-          if (isTokenExpired(accessToken) && refreshToken) {
-            try {
-              const refreshResponse = await api.post(endPoints.refresh, { refreshToken });
-              if (refreshResponse.data.accessToken) {
-                localStorage.setItem('accessToken', refreshResponse.data.accessToken);
-                api.defaults.headers.common['Authorization'] = `Bearer ${refreshResponse.data.accessToken}`;
-                if (refreshResponse.data.refreshToken) {
-                  localStorage.setItem('refreshToken', refreshResponse.data.refreshToken);
-                }
-              }
-            } catch (error) {
-              console.error("Token refresh failed:", error);
-              logout();
-              return;
-            }
-          } else {
-            api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-          }
-
-          try {
-            console.log('Fetching user profile...');
-            const res = await api.get(`${endPoints.profile}`);
-            setUser(res.data);
-            console.log(res.data)
-          } catch (error) {
-            console.error("Profile fetch failed:", error);
-            logout();
-          }
+      if (storedUser && accessToken) {
+        if (isTokenExpired(accessToken)) {
+          console.log('Access token expired. Refreshing...');
+          await api.post(endPoints.refresh, {
+            refreshToken: localStorage.getItem('refreshToken'),
+          });
+          await api.get(endPoints.profile);
+          setUser(JSON.parse(storedUser));
+        } else {
+          await api.get(endPoints.profile, {headers: { Authorization: `Bearer ${accessToken}` }});
+          setUser(JSON.parse(storedUser));
         }
-      } catch (error) {
-        console.error("Auth initialization failed:", error);
-      } finally {
-        setLoading(false);
       }
+
+      setLoading(false);
     };
 
     loadUser();
   }, []);
 
-  const login = async (accessToken: string, refreshToken: string) => {
-    try {
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-
-      // const userRes = await api.get(endPoints.profile);
-      // setUser(userRes.data);
-      // console.log(userRes.data);
-      // localStorage.setItem('userId', userRes.data.id);
-      
-    } catch (error) {
-      console.error("Login failed:", error);
-      logout();
-    }
+  const login = (userData, accessToken, refreshToken) => {
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
-    localStorage.removeItem('userId');
-    // window.location.href = '/auth/login';
+    localStorage.removeItem('user');
+    window.location.href = '/auth/login';
   };
 
   const contextValue: AuthContextType = {

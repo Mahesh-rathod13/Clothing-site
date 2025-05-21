@@ -9,12 +9,12 @@ export const AuthRoutes = {
         {
             path : 'login',
             title: 'Login',
-            lazy : () => import('../pages/Auth/Login/Login').then((mod)=>({element : <mod.default />}))
+            lazy : () => import('../pages/Auth/Login/Login')
         },
         {
             path : 'sign-up',
             title: 'Signup',
-            lazy : ()=> import('../pages/Auth/Signup/Signup').then((mod)=>({element : <mod.default />}))
+            lazy : ()=> import('../pages/Auth/Signup/Signup')
         }
     ]
 };
