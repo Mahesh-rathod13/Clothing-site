@@ -14,11 +14,12 @@ const refreshAccessToken = async () =>{
 
     try {
         const res = await axios.post(baseURL + endPoints.refresh, {
-            refreshToken
+            "refreshToken" : refreshToken
         });
         
         const newAccessToken = res.data['access_token'];
         const newRefreshToken= res.data['refresh_token'];
+
 
         localStorage.setItem('accessToken', newAccessToken);
         localStorage.setItem('refreshToken', newRefreshToken);

@@ -50,9 +50,9 @@ export function RelatedProducts({ currentProductId }: RelatedProductsProps) {
     if (!products.length) return null;
 
     return (
-        <div className="mt-12">
+        <div className="mt-12 w-full">
             <h2 className="text-xl font-bold mb-4">Related Products</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="flex flex-wrap gap-10">
                 {products.map(product => (
                     <ProductCard id={product.id} title={product.title} image={product.images[0]} price={product.price} category={product.category?.name} slug={product?.slug} />
                 ))}

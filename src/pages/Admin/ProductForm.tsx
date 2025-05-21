@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
-import { number, z } from "zod";
+import {  z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { Loader } from "lucide-react";
 
 const productSchema = z.object({
   title: z.string().min(2, "Title is required"),
@@ -19,10 +20,12 @@ export default function ProductForm({
   product,
   onClose,
   onSubmit,
+  loading
 }: {
   product: any,
   onClose: () => void,
   onSubmit: (product: any) => void
+  loading: boolean
 }) {
   const { register, handleSubmit, formState: { errors } } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -95,10 +98,14 @@ export default function ProductForm({
         {errors.description && (
           <p className="text-red-500 text-xs">{errors.description.message}</p>
         )}
-        <div className="flex gap-2 justify-end">
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-          <Button type="submit">{product ? "Update" : "Add"}</Button>
-        </div>
+        {loading
+          ?
+          <Loader />
+          :
+          <div className="flex gap-2 justify-end">
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit">{product ? "Update" : "Add"}</Button>
+          </div>}
       </form>
     </div>
   );

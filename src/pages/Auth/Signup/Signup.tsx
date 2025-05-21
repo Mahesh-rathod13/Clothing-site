@@ -2,7 +2,7 @@ import React from 'react'
 import LoginImage from '../../../assets/images/loginImage.png'
 import SignupForm from '../../../components/signup-form';
 
-const Signup = () => {
+export function Component() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
@@ -23,4 +23,4 @@ const Signup = () => {
   );
 }
 
-export default Signup
+Component.displayName = "Signup";

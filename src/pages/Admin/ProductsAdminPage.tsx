@@ -1,14 +1,18 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { useReactTable, getCoreRowModel, getSortedRowModel, flexRender, getFilteredRowModel } from "@tanstack/react-table";
+import { useEffect, useMemo, useState } from "react";
+import { useReactTable, getCoreRowModel, getSortedRowModel} from "@tanstack/react-table";
 import { Input } from "../../components/ui/input";
-import useAuth from "../../hooks/useAuth";
-import { GetProducts } from "@/services/Products";
 import ProductTable from "./ProductTable";
 import ProductForm from "./ProductForm";
 import ProductTablePagination from "./ProductTablePagination";
 import { Button } from "../../components/ui/button";
 import api from "../../services/api";
 import { endPoints } from "../../constants/urls";
+import { usePaginationState } from "../../store/PaginationState";
+import { GetProducts } from "../../services/Products";
+import { Loader } from "lucide-react";
+import { useSearchParams } from "react-router";
+import useDebounce from "../../utils/Debounce/useDebounce";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
 
 interface Product {
   id: number;
@@ -21,35 +25,51 @@ interface Product {
 }
 
 export function Component() {
-  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [loading, setLoading] = useState(true);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [uploading, setUploading] = useState(false);
+  const PaginationState = usePaginationState();
+  const { pageIndex, pageSize } = PaginationState.getState();
+  const { setTotalCount } = PaginationState;
 
   // Modal state for add/edit
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showForm, setShowForm] = useState(false);
 
-  // Pagination state
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(8);
-  const [totalCount, setTotalCount] = useState(0);
+  // Column visibility state
+  const [columnVisibility, setColumnVisibility] = useState({});
+
+  const debouncedSearchTerm = useDebounce(globalFilter, 100); // 2-second delay
 
   // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const res = await GetProducts(pageIndex, pageSize);
+        const offset = pageIndex * pageSize;
+        const res = await GetProducts(pageIndex, pageSize, debouncedSearchTerm);
+
+        setSearchParams(params => {
+          params.set("offset", String(offset));
+          params.set("limit", String(res?.data?.length));
+          if (debouncedSearchTerm) params.set("search", debouncedSearchTerm);
+          else params.delete("search");
+          return params;
+        });
+
         setProducts(res?.data?.products || res?.data || []);
         setTotalCount(res?.data?.total || res?.data?.count || 0);
       } catch (e) {
+        console.error("Error fetching products", e);
         setProducts([]);
       }
       setLoading(false);
     };
     fetchProducts();
-  }, [pageIndex, pageSize]);
+  }, [pageIndex, pageSize, debouncedSearchTerm, setSearchParams]);
 
   // Table columns
   const columns = useMemo(
@@ -82,7 +102,7 @@ export function Component() {
           </div>
         ),
       },
- ],
+    ],
     []
   );
 
@@ -90,14 +110,12 @@ export function Component() {
   const table = useReactTable({
     data: products,
     columns,
-    state: { globalFilter },
+    state: { globalFilter, columnVisibility },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: (row, columnId, filterValue) => {
-      return String(row.getValue(columnId)).toLowerCase().includes(filterValue.toLowerCase());
-    },
+    onColumnVisibilityChange: setColumnVisibility,
+    manualFiltering: true,
   });
 
   // CRUD handlers
@@ -118,6 +136,7 @@ export function Component() {
   };
 
   const handleFormSubmit = async (product: Partial<Product>) => {
+    setUploading(true)
     if (editingProduct) {
       // Update
       const res = await api.put(endPoints.products + editingProduct.id, product);
@@ -127,40 +146,61 @@ export function Component() {
       const res = await api.post(endPoints.products, product);
       setProducts(products => [res.data, ...products]);
     }
+    setUploading(false);
     setShowForm(false);
   };
 
-  if (!user) {
-    return <div className="p-10 text-red-500">Access denied. Admins only.</div>;
-  }
+
+  // if (!user) {
+  //   return <div className="p-10 text-red-500">Access denied</div>;
+  // }
 
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Products Admin</h2>
-        <Button onClick={handleAdd}>Add Product</Button>
+        <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">Columns</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {table.getAllLeafColumns().map(column => (
+                <DropdownMenuCheckboxItem
+                  key={column.id}
+                  checked={column.getIsVisible()}
+                  onCheckedChange={() => column.toggleVisibility()}
+                >
+                  {column.columnDef.header as string}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button onClick={handleAdd}>Add Product</Button>
+        </div>
       </div>
       <Input
         placeholder="Search products..."
         value={globalFilter}
-        onChange={e => setGlobalFilter(e.target.value)}
+        onChange={e => {
+          setGlobalFilter(e.target.value);
+          // PaginationState.setState({ pageIndex: 0 }); // Reset to first page on search
+        }}
         className="mb-4 max-w-xs"
       />
-      <ProductTable products={products} columns={columns} loading={loading} table={table} />
-      <ProductTablePagination
-        pageIndex={pageIndex}
-        pageSize={pageSize}
-        totalCount={totalCount}
-        setPageIndex={setPageIndex}
-        setPageSize={setPageSize}
-      />
-      {showForm && (
-        <ProductForm
-          product={editingProduct}
-          onClose={() => setShowForm(false)}
-          onSubmit={handleFormSubmit}
-        />
-      )}
+      {loading ? <Loader /> :
+        <div className="overflow-x-auto ">
+          <ProductTable products={products} columns={columns} loading={loading} table={table} />
+          <ProductTablePagination />
+          {showForm && (
+            <ProductForm
+              product={editingProduct}
+              onClose={() => setShowForm(false)}
+              onSubmit={handleFormSubmit}
+              loading={uploading}
+            />
+          )}
+        </div>}
     </div>
   );
 }
