@@ -1,14 +1,19 @@
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "../ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { Menu } from "lucide-react"
-import { Link, NavLink } from 'react-router'
+import { Link, useNavigate, NavLink } from 'react-router'
 import useAuth from "../../hooks/useAuth"
 import { useLocation } from "react-router"
+import { useProductCartState } from "../../store/ProductCartState"
+import CartButton from "./CartButton"
 
 const Navbar = () => {
   const { user, logout } = useAuth();
 
+  const ProductCartState = useProductCartState();
+  const { cartItems } = ProductCartState.getState();
+  const navigate = useNavigate();
   const location = useLocation();
   const isLoginPage = location.pathname.includes('/login');
 
@@ -20,13 +25,10 @@ const Navbar = () => {
         <div className="text-xl font-semibold tracking-tight flex items-center gap-10">
           <div> <h1 className="text-2xl">Accha Pehno</h1></div>
           <nav className="hidden md:flex gap-6">
-            <NavLink to='/' className={({isActive})=>`text-md font-medium text-muted-foreground hover:text-foreground ${isActive ? 'text-red-800' : 'text-muted-foreground'}`}>
+            <NavLink to='/' className={({ isActive }) => `text-md font-medium text-muted-foreground hover:text-foreground ${isActive ? 'text-red-800' : 'text-muted-foreground'}`}>
               Home
             </NavLink>
-            <NavLink to='/admin/products' className={({isActive})=>`text-md font-medium text-muted-foreground hover:text-foreground ${isActive ? 'text-red-800' : 'text-muted-foreground'}`}>
-              posts
-            </NavLink>
-            <NavLink to='/contact' className={({isActive})=>`text-md font-medium text-muted-foreground hover:text-foreground ${isActive ? 'text-red-800' : 'text-muted-foreground'}`}>
+            <NavLink to='/contact' className={({ isActive }) => `text-md font-medium text-muted-foreground hover:text-foreground ${isActive ? 'text-red-800' : 'text-muted-foreground'}`}>
               Contact
             </NavLink>
           </nav>
@@ -34,6 +36,7 @@ const Navbar = () => {
 
         {/* Right: User actions */}
         <div className="flex items-center gap-4">
+          <CartButton count={cartItems.length} />
           {user ?
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -43,9 +46,22 @@ const Navbar = () => {
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+                <DropdownMenuItem
+                  // Highlight if on /profile
+                  onClick={() => navigate('/admin/profile')}
+                  className={location.pathname === "/admin/profile" ? "bg-gray-100 font-semibold" : ""}
+                >
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => navigate('/admin/manage-products')}
+                  className={location.pathname === "/admin/manage-products" ? "bg-gray-100 font-semibold" : ""}
+                >
+                  Manage Posts
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={logout}>
+                  Logout
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             :

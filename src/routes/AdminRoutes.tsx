@@ -1,16 +1,27 @@
-
 import Loader from '../components/Loader/Loader'
 import { MainLayout } from "../layout/MainLayout/MainLayout";
+import ProtectedRoute from './ProtectedRoute';
 
 export const AdminRoutes = {
-    path : '/admin',
-    element : <MainLayout />,
-    hydrateFallbackElement : <Loader />,
-    children : [
+    path: '/admin',
+    element: (
+        <ProtectedRoute>
+            <MainLayout />
+        </ProtectedRoute>
+    ),
+    hydrateFallbackElement: <Loader />,
+    children: [
         {
-        path: 'products',
-        title: 'Products',
-        lazy: () => import('../pages/Admin/ProductsAdminPage'),
-    },
+            path: 'manage-products',
+            title: 'Manage Products',
+            hydrateFallbackElement: <Loader />,
+            lazy: () => import('../pages/Admin/ProductsAdminPage'),
+        },
+        {
+            path : 'profile',
+            title: 'Profile',
+            hydrateFallbackElement: <Loader />,
+            lazy: () => import('../pages/ProfileView/ProfileViewPage'),
+        }
     ]
 };
