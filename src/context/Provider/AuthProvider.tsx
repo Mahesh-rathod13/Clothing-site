@@ -17,6 +17,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   login: (accessToken: string, refreshToken: string) => Promise<void>;
   logout: () => void;
 }
@@ -72,6 +73,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   const contextValue: AuthContextType = {
     user,
     loading,
+    setLoading,
     login,
     logout,
   };
