@@ -1,41 +1,44 @@
-import { endPoints } from "../constants/urls"
-import api from "./api"
+import { endPoints } from "../constants/urls";
+import api from "./api";
 
-const GetProducts = (pageIndex: number, pageSize: number, search: string = "")=> {
+const GetProducts = (
+  pageIndex: number,
+  pageSize: number,
+  title: string = ""
+) => {
   const params: Record<string, any> = {
     offset: pageIndex * pageSize,
     limit: pageSize,
   };
-  if (search) params.title = search;
+  if (title) params.title = title;
   return api.get(endPoints.products, { params });
-}
+};
 
+const GetProductById = async (id: number) => {
+  try {
+    const res = await api.get(endPoints.products + `/${id}`);
+    return res;
+  } catch (error) {
+    return null;
+  }
+};
 
-const GetProductById = async (id : number)=>{
-    try {
-        const res = await api.get(endPoints.products+`/${id}`);
-        return res;
-    } catch (error) {
-        return null;
-    }
-}
+const GetProductBySlug = async (slug: string) => {
+  try {
+    const res = await api.get(endPoints.products + `${slug}`);
+    return res;
+  } catch (error) {
+    return null;
+  }
+};
 
-const GetProductBySlug = async (slug : string)=>{
-    try {
-        const res = await api.get(endPoints.products+`${slug}`);
-        return res;
-    } catch (error) {
-        return null;
-    }
-}
+export { GetProductById, GetProductBySlug, GetProducts };
 
-export {
-    GetProducts,
-    GetProductById,
-    GetProductBySlug
-}
-
-function sortProductsByColumn<T>(data: T[], column: keyof T, order: "asc" | "desc" = "asc"): T[] {
+function sortProductsByColumn<T>(
+  data: T[],
+  column: keyof T,
+  order: "asc" | "desc" = "asc"
+): T[] {
   return [...data].sort((a, b) => {
     if (a[column] === b[column]) return 0;
     if (order === "asc") {

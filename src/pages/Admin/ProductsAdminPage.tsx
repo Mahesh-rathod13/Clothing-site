@@ -1,18 +1,27 @@
-import { useEffect, useMemo, useState } from "react";
-import { useReactTable, getCoreRowModel, getSortedRowModel} from "@tanstack/react-table";
-import { Input } from "../../components/ui/input";
-import ProductTable from "./ProductTable";
-import ProductForm from "./ProductForm";
-import ProductTablePagination from "./ProductTablePagination";
-import { Button } from "../../components/ui/button";
-import api from "../../services/api";
-import { endPoints } from "../../constants/urls";
-import { usePaginationState } from "../../store/PaginationState";
-import { GetProducts } from "../../services/Products";
+import {
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import { Loader } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
+import { Button } from "../../components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
+import { Input } from "../../components/ui/input";
+import { endPoints } from "../../constants/urls";
+import api from "../../services/api";
+import { GetProducts } from "../../services/Products";
+import { usePaginationState } from "../../store/PaginationState";
 import useDebounce from "../../utils/Debounce/useDebounce";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
+import ProductForm from "./ProductForm";
+import ProductTable from "./ProductTable";
+import ProductTablePagination from "./ProductTablePagination";
 
 interface Product {
   id: number;
@@ -42,7 +51,7 @@ export function Component() {
   // Column visibility state
   const [columnVisibility, setColumnVisibility] = useState({});
 
-  const debouncedSearchTerm = useDebounce(globalFilter, 100); // 2-second delay
+  const debouncedSearchTerm = useDebounce(globalFilter, 1000); // 2-second delay
 
   // Fetch products
   useEffect(() => {
@@ -52,11 +61,12 @@ export function Component() {
         const offset = pageIndex * pageSize;
         const res = await GetProducts(pageIndex, pageSize, debouncedSearchTerm);
 
-        setSearchParams(params => {
+        // console.log(res.data.length);
+        setSearchParams((params) => {
           params.set("offset", String(offset));
           params.set("limit", String(res?.data?.length));
-          if (debouncedSearchTerm) params.set("search", debouncedSearchTerm);
-          else params.delete("search");
+          if (debouncedSearchTerm) params.set("title", debouncedSearchTerm);
+          else params.delete("title");
           return params;
         });
 
@@ -69,7 +79,7 @@ export function Component() {
       setLoading(false);
     };
     fetchProducts();
-  }, [pageIndex, pageSize, debouncedSearchTerm, setSearchParams]);
+  }, [pageIndex, pageSize, debouncedSearchTerm]);
 
   // Table columns
   const columns = useMemo(
@@ -85,20 +95,32 @@ export function Component() {
       {
         accessorKey: "price",
         header: "Price",
-        cell: info => `$${info.getValue()}`,
+        cell: (info) => `$${info.getValue()}`,
       },
       {
         accessorKey: "category",
         header: "Category",
-        cell: info => info.row.original.category?.name,
+        cell: (info) => info.row.original.category?.name,
       },
       {
         accessorKey: "actions",
         header: "Actions",
-        cell: info => (
+        cell: (info) => (
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => handleEdit(info.row.original)}>Edit</Button>
-            <Button size="sm" variant="destructive" onClick={() => handleDelete(info.row.original.id)}>Delete</Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleEdit(info.row.original)}
+            >
+              Edit
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => handleDelete(info.row.original.id)}
+            >
+              Delete
+            </Button>
           </div>
         ),
       },
@@ -122,7 +144,7 @@ export function Component() {
   const handleDelete = async (id: number) => {
     if (!window.confirm("Delete this product?")) return;
     await api.delete(endPoints.products + id);
-    setProducts(products => products.filter(p => p.id !== id));
+    setProducts((products) => products.filter((p) => p.id !== id));
   };
 
   const handleEdit = (product: Product) => {
@@ -136,20 +158,24 @@ export function Component() {
   };
 
   const handleFormSubmit = async (product: Partial<Product>) => {
-    setUploading(true)
+    setUploading(true);
     if (editingProduct) {
       // Update
-      const res = await api.put(endPoints.products + editingProduct.id, product);
-      setProducts(products => products.map(p => (p.id === editingProduct.id ? res.data : p)));
+      const res = await api.put(
+        endPoints.products + editingProduct.id,
+        product
+      );
+      setProducts((products) =>
+        products.map((p) => (p.id === editingProduct.id ? res.data : p))
+      );
     } else {
       // Add
       const res = await api.post(endPoints.products, product);
-      setProducts(products => [res.data, ...products]);
+      setProducts((products) => [res.data, ...products]);
     }
     setUploading(false);
     setShowForm(false);
   };
-
 
   // if (!user) {
   //   return <div className="p-10 text-red-500">Access denied</div>;
@@ -162,10 +188,12 @@ export function Component() {
         <div className="flex gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">Columns</Button>
+              <Button variant="outline" size="sm">
+                Columns
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              {table.getAllLeafColumns().map(column => (
+              {table.getAllLeafColumns().map((column) => (
                 <DropdownMenuCheckboxItem
                   key={column.id}
                   checked={column.getIsVisible()}
@@ -182,15 +210,17 @@ export function Component() {
       <Input
         placeholder="Search products..."
         value={globalFilter}
-        onChange={e => {
+        onChange={(e) => {
           setGlobalFilter(e.target.value);
-          // PaginationState.setState({ pageIndex: 0 }); // Reset to first page on search
+          PaginationState.setPageIndex(0); // Reset to first page on search
         }}
         className="mb-4 max-w-xs"
       />
-      {loading ? <Loader /> :
+      {loading ? (
+        <Loader />
+      ) : (
         <div className="overflow-x-auto ">
-          <ProductTable products={products} columns={columns} loading={loading} table={table} />
+          <ProductTable columns={columns} loading={loading} table={table} />
           <ProductTablePagination />
           {showForm && (
             <ProductForm
@@ -200,9 +230,10 @@ export function Component() {
               loading={uploading}
             />
           )}
-        </div>}
+        </div>
+      )}
     </div>
   );
 }
 
-Component.displayName = 'ProductsAdminPage';
+Component.displayName = "ProductsAdminPage";

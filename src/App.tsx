@@ -1,13 +1,20 @@
-import './App.css'
-import { RouterProvider } from 'react-router';
-import router from './routes'
-import Loader from './components/Loader/Loader';
+import { useEffect, useState } from "react";
+import { RouterProvider } from "react-router";
+import "./App.css";
+import SplashScreen from "./components/SplashScreen/SplashScreen";
+import router from "./routes";
 
 function App() {
+  const [splashScreen, setSplashScreen] = useState(true);
 
-  return (
-    <RouterProvider router={router}/>
-  )
+  useEffect(() => {
+    setTimeout(() => {
+      setSplashScreen(false);
+    }, 3000);
+  });
+
+  if (splashScreen) return <SplashScreen />;
+  return <RouterProvider router={router} />;
 }
 
 export default App;
