@@ -1,18 +1,18 @@
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useState } from "react"
-import api from "../services/api"
-import axios from "axios"
-import { endPoints } from "../constants/urls"
-import useAuth from "../hooks/useAuth"
-import { z } from "zod";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader } from "lucide-react"
-import { useNavigate, useLocation } from "react-router"
+import axios from "axios";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useLocation, useNavigate } from "react-router";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { z } from "zod";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { endPoints } from "../constants/urls";
+import useAuth from "../hooks/useAuth";
+import { cn } from "../lib/utils";
+import api from "../services/api";
+import Loader from "./Loader/Loader";
 import {
   Form,
   FormControl,
@@ -20,11 +20,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "./ui/form"
+} from "./ui/form";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters." }),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters." }),
 });
 
 type LoginFormProps = z.infer<typeof loginSchema>;
@@ -33,21 +35,19 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
-
   const form = useForm<LoginFormProps>({
     resolver: zodResolver(loginSchema),
     mode: "onBlur",
   });
 
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-
   const onSubmit = async (data: LoginFormProps) => {
-    setIsLoading(true);
+    setLoading(true);
     setError(null);
 
     try {
@@ -57,7 +57,7 @@ export function LoginForm({
         throw new Error("Invalid response from server");
       }
 
-      let profile = await axios.get(
+      const profile = await axios.get(
         import.meta.env.VITE_API_BASE_URL + endPoints.profile,
         {
           headers: {
@@ -81,11 +81,9 @@ export function LoginForm({
       setError(errMsg);
       toast.error(errMsg);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
-
-  if (isLoading) return <Loader />;
 
   return (
     <>
@@ -135,17 +133,14 @@ export function LoginForm({
                     </a>
                   </div>
                   <FormControl>
-                    <Input
-                      type="password"
-                      {...field}
-                    />
+                    <Input type="password" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">
-              Login
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? <Loader variant="pulse" /> : "Login"}
             </Button>
             <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
               <span className="bg-background text-muted-foreground relative z-10 px-2">
