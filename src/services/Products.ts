@@ -4,13 +4,17 @@ import api from "./api";
 const GetProducts = (
   pageIndex: number,
   pageSize: number,
-  title: string = ""
+  title: string = "",
+  sortBy: string = "",
+  sortDirection: string = ""
 ) => {
   const params: Record<string, any> = {
     offset: pageIndex * pageSize,
     limit: pageSize,
   };
   if (title) params.title = title;
+  if (sortBy) params.sortBy = sortBy;
+  if (sortDirection) params.sortDirection = sortDirection;
   return api.get(endPoints.products, { params });
 };
 
